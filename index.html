@@ -1,0 +1,81 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Sandbox AR</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <meta name="referrer" content="origin-when-cross-origin" />
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
+    <script>
+        let globSelectedAnim = 0;
+        function runSequencedAnimations(ent, obj, duration, tdur) {
+            if (!ent.hasAttribute('animation-mixer')) {
+                ent.setAttribute('animation-mixer', 'clip: ' + obj.animations[globSelectedAnim].name);
+            } else {
+                ent.setAttribute('animation-mixer', 'clip: ' + obj.animations[globSelectedAnim].name);
+            }
+            setTimeout(() => {
+                if (globSelectedAnim !== 0) {
+                    globSelectedAnim--;
+                    runSequencedAnimations(ent, obj, duration, tdur);
+                } else {
+                    loadEnt(ent);
+                }
+            }, tdur[globSelectedAnim] * 1000);
+        }
+        function loadEnt(ent) {
+            let _tdur = [];
+            let _duration = 0;
+            let _obj = ent.getObject3D('mesh');
+            if (globSelectedAnim === 0)
+                _obj.animations.map((_animTrack, _i) => {
+                    _duration += _animTrack.duration;
+                    _tdur.splice(_i, 1, _animTrack.duration);
+                    console.log(_animTrack);
+                    if (_i === _obj.animations.length - 1) {
+                        globSelectedAnim = _i;
+                        runSequencedAnimations(ent, _obj, _duration, _tdur);
+                    }
+                });
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('renderstart', () => {
+                let _mainEnt = document.getElementById('3d-object');
+                if (_mainEnt.hasLoaded) {
+                    loadEnt(_mainEnt);
+                } else {
+                    _mainEnt.addEventListener('model-loaded', () => {
+                        loadEnt(_mainEnt);
+                    });
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <!-- AFRAME -->
+    <a-scene id="scene" embedded renderer="logarithmicDepthBuffer: true; antialias: true;" vr-mode-ui="enabled: false"
+        gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/;">
+        <a-assets timeout="15000">
+            <a-asset-item id="model" src="models/cat animation.glb"></a-asset-item>
+        </a-assets>
+        <a-entity id="3d-object" gltf-model="#model">
+        </a-entity>
+        <a-entity camera look-controls="enabled: false" position="0 0 1">
+            <a-entity cursor="rayOrigin: mouse;" raycaster="objects: .clickable">
+            </a-entity>
+        </a-entity>
+    </a-scene>
+</body>
+
+</html>
