@@ -18,19 +18,19 @@
     <script>
         let globSelectedAnim = 0;
         function runSequencedAnimations(ent, obj, duration, tdur) {
-            if (!ent.hasAttribute('animation-mixer')) {
-                ent.setAttribute('animation-mixer', 'clip: ' + obj.animations[globSelectedAnim].name);
-            } else {
-                ent.setAttribute('animation-mixer', 'clip: ' + obj.animations[globSelectedAnim].name);
-            }
-            setTimeout(() => {
-                if (globSelectedAnim !== 0) {
-                    globSelectedAnim--;
+            console.log(globSelectedAnim);
+            ent.setAttribute('animation-mixer', 'clip: ' + obj.animations[globSelectedAnim].name + '; clampWhenFinished: false; loop: false; repetitions: 1;');
+            if (globSelectedAnim !== 0) {
+                globSelectedAnim--;
+                ent.addEventListener('animation-finished', () => {
                     runSequencedAnimations(ent, obj, duration, tdur);
-                } else {
+                });
+            } else {
+                ent.addEventListener('animation-finished', () => {
                     loadEnt(ent);
-                }
-            }, tdur[globSelectedAnim] * 1000);
+                });
+            }
+            ent.components['animation-mixer'].play();
         }
         function loadEnt(ent) {
             let _tdur = [];
