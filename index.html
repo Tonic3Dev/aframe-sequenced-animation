@@ -16,21 +16,9 @@
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
     <script>
-        let globSelectedAnim = 0;
-        function runSequencedAnimations(ent, obj, duration, tdur) {
-            console.log(globSelectedAnim);
-            ent.setAttribute('animation-mixer', 'clip: ' + obj.animations[globSelectedAnim].name + '; clampWhenFinished: false; loop: false; repetitions: 1;');
-            if (globSelectedAnim !== 0) {
-                globSelectedAnim--;
-                ent.addEventListener('animation-finished', () => {
-                    runSequencedAnimations(ent, obj, duration, tdur);
-                });
-            } else {
-                ent.addEventListener('animation-finished', () => {
-                    loadEnt(ent);
-                });
-            }
-            ent.components['animation-mixer'].play();
+        let globSelectedAnim = 0, globAnim = [];
+        async function runSequencedAnimations(ent, obj, duration, tdur) {
+            console.log(ent.components['animation-mixer']);
         }
         function loadEnt(ent) {
             let _tdur = [];
@@ -38,22 +26,26 @@
             let _obj = ent.getObject3D('mesh');
             if (globSelectedAnim === 0)
                 _obj.animations.map((_animTrack, _i) => {
-                    _duration += _animTrack.duration;
-                    _tdur.splice(_i, 1, _animTrack.duration);
                     console.log(_animTrack);
                     if (_i === _obj.animations.length - 1) {
-                        globSelectedAnim = _i;
                         runSequencedAnimations(ent, _obj, _duration, _tdur);
                     }
                 });
         }
         document.addEventListener('DOMContentLoaded', () => {
+            const camera_feed = document.getElementById('video');
             document.addEventListener('renderstart', () => {
+                window.navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(stream => {
+                    camera_feed.srcObject = stream;
+                    camera_feed.load();
+                });
                 let _mainEnt = document.getElementById('3d-object');
                 if (_mainEnt.hasLoaded) {
+                    _mainEnt.setAttribute('animation-mixer', '');
                     loadEnt(_mainEnt);
                 } else {
                     _mainEnt.addEventListener('model-loaded', () => {
+                        _mainEnt.setAttribute('animation-mixer', '');
                         loadEnt(_mainEnt);
                     });
                 }
@@ -65,17 +57,18 @@
 <body>
     <!-- AFRAME -->
     <a-scene id="scene" embedded renderer="logarithmicDepthBuffer: true; antialias: true;" vr-mode-ui="enabled: false"
-        gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/;">
+        background="transparent: true;" gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/;">
         <a-assets timeout="15000">
-            <a-asset-item id="model" src="models/cat animation.glb"></a-asset-item>
+            <a-asset-item id="model" src="models/cat animation-single.glb"></a-asset-item>
         </a-assets>
         <a-entity id="3d-object" gltf-model="#model">
         </a-entity>
-        <a-entity camera look-controls="enabled: false" position="0 0 1">
+        <a-entity camera look-controls position="0 0 1">
             <a-entity cursor="rayOrigin: mouse;" raycaster="objects: .clickable">
             </a-entity>
         </a-entity>
     </a-scene>
+    <video autoplay id="video" style="position: absolute; z-index: -1; top: 0; width: 100%; height: 100%;"> </video>
 </body>
 
 </html>
