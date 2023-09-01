@@ -40,7 +40,7 @@
                     camera_feed.srcObject = stream;
                     camera_feed.onloadeddata = async (e) => {
                         if (_mainEnt.hasLoaded) {
-                            await _mainEnt.setAttribute('animation-mixer', 'loop: once;');
+                            await _mainEnt.setAttribute('animation-mixer', 'loop: repeat;');
                             loadEnt(_mainEnt);
                         } else {
                             await _mainEnt.addEventListener('model-loaded', async () => {
